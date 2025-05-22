@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Conexões - Corrida de LED</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Cor de fundo suave */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 16px; /* Cantos arredondados */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        svg {
+            width: 100%;
+            max-width: 900px; /* Largura máxima para o SVG */
+            height: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .pin-label {
+            font-size: 10px; /* Tamanho da fonte para os rótulos dos pinos */
+            fill: #4a5568; /* Cor do texto */
+            font-weight: 600;
+        }
+        .component-label {
+            font-size: 12px;
+            fill: #2d3748;
+            font-weight: 700;
+        }
+        .wire {
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+        }
+        .wire-red { stroke: #ef4444; } /* Vermelho para VCC */
+        .wire-black { stroke: #1a202c; } /* Preto para GND */
+        .wire-blue { stroke: #3b82f6; } /* Azul para dados/sinal */
+        .wire-green { stroke: #10b981; } /* Verde para dados/sinal */
+        .wire-orange { stroke: #f97316; } /* Laranja para dados/sinal */
+
+        /* Estilos para os componentes */
+        .arduino-body { fill: #00979C; } /* Cor do corpo do Arduino */
+        .arduino-header { fill: #2d3748; } /* Cor da barra de cabeçalho do Arduino */
+        .arduino-pin { fill: #a0aec0; } /* Cor dos pinos */
+        .led-strip-body { fill: #cbd5e0; }
+        .led { fill: #fbd38d; } /* Cor dos LEDs na fita */
+        .button-body { fill: #e2e8f0; stroke: #a0aec0; stroke-width: 1; }
+        .button-cap-red { fill: #ef4444; }
+        .button-cap-blue { fill: #3b82f6; }
+        .button-cap-gray { fill: #a0aec0; }
+        .buzzer-body { fill: #a0aec0; }
+        .buzzer-top { fill: #2d3748; }
+        .buzzer-terminal { fill: #718096; }
+
+        .info-box {
+            background-color: #e0f2f7; /* Um azul claro */
+            color: #2a4365; /* Texto azul escuro */
+            border-left: 4px solid #3182ce; /* Borda azul */
+            padding: 15px 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            width: 100%;
+            max-width: 800px;
+            text-align: left;
+        }
+        .llm-section {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #f8fafc;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+        .llm-button {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .llm-button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        .llm-button:active {
+            background-color: #3e8e41;
+            transform: translateY(0);
+        }
+        .llm-button:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+        }
+        .ideas-output {
+            margin-top: 20px;
+            text-align: left;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 100px;
+            font-size: 15px;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+        .ideas-output ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .ideas-output li {
+            margin-bottom: 8px;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="container flex flex-col items-center p-8 rounded-2xl shadow-xl">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">Diagrama de Conexões: Projeto Corrida de LED</h1>
+
+        <div class="info-box">
+            <p>Este diagrama visualiza as conexões do seu projeto de corrida de LED. As linhas coloridas representam os fios, conectando cada componente ao pino correto no Arduino.</p>
+            <ul class="list-disc pl-5 mt-2">
+                <li><span class="font-semibold">Fios Vermelhos:</span> Alimentação (5V)</li>
+                <li><span class="font-semibold">Fios Pretos:</span> Terra (GND)</li>
+                <li><span class="font-semibold">Outras Cores:</span> Sinais de Dados</li>
+            </ul>
+        </div>
+
+        <svg viewBox="0 0 900 600" class="mt-8">
+            <rect x="300" y="100" width="300" height="400" rx="15" ry="15" class="arduino-body" />
+            <rect x="300" y="100" width="300" height="30" rx="15" ry="15" class="arduino-header" />
+            <text x="450" y="125" text-anchor="middle" class="component-label" fill="white">ARDUINO UNO</text>
+
+            <circle cx="580" cy="150" r="4" class="arduino-pin" /> <text x="590" y="153" class="pin-label">D13</text>
+            <circle cx="580" cy="170" r="4" class="arduino-pin" /> <text x="590" y="173" class="pin-label">D12</text>
+            <circle cx="580" cy="190" r="4" class="arduino-pin" /> <text x="590" y="193" class="pin-label">D11</text>
+            <circle cx="580" cy="210" r="4" class="arduino-pin" /> <text x="590" y="213" class="pin-label">D10</text>
+            <circle cx="580" cy="230" r="4" class="arduino-pin" /> <text x="590" y="233" class="pin-label">D9</text>
+            <circle cx="580" cy="250" r="4" class="arduino-pin" /> <text x="590" y="253" class="pin-label">D8</text>
+            <circle cx="580" cy="270" r="4" class="arduino-pin" /> <text x="590" y="273" class="pin-label">D7</text>
+            <circle cx="580" cy="290" r="4" class="arduino-pin" /> <text x="590" y="293" class="pin-label">D6</text>
+            <circle cx="580" cy="310" r="4" class="arduino-pin" /> <text x="590" y="313" class="pin-label">D5</text>
+            <circle cx="580" cy="330" r="4" class="arduino-pin" /> <text x="590" y="333" class="pin-label">D4</text>
+            <circle cx="580" cy="350" r="4" class="arduino-pin" /> <text x="590" y="353" class="pin-label">D3</text>
+            <circle cx="580" cy="370" r="4" class="arduino-pin" /> <text x="590" y="373" class="pin-label">D2</text>
+            <circle cx="580" cy="390" r="4" class="arduino-pin" /> <text x="590" y="393" class="pin-label">D1</text>
+            <circle cx="580" cy="410" r="4" class="arduino-pin" /> <text x="590" y="413" class="pin-label">D0</text>
+
+            <circle cx="320" cy="150" r="4" class="arduino-pin" /> <text x="290" y="153" text-anchor="end" class="pin-label">VIN</text>
+            <circle cx="320" cy="170" r="4" class="arduino-pin" /> <text x="290" y="173" text-anchor="end" class="pin-label">GND</text>
+            <circle cx="320" cy="190" r="4" class="arduino-pin" /> <text x="290" y="193" text-anchor="end" class="pin-label">GND</text>
+            <circle cx="320" cy="210" r="4" class="arduino-pin" /> <text x="290" y="213" text-anchor="end" class="pin-label">5V</text>
+            <circle cx="320" cy="230" r="4" class="arduino-pin" /> <text x="290" y="233" text-anchor="end" class="pin-label">3.3V</text>
+            <circle cx="320" cy="250" r="4" class="arduino-pin" /> <text x="290" y="253" text-anchor="end" class="pin-label">RESET</text>
+            <circle cx="320" cy="270" r="4" class="arduino-pin" /> <text x="290" y="273" text-anchor="end" class="pin-label">AREF</text>
+            <circle cx="320" cy="290" r="4" class="arduino-pin" /> <text x="290" y="293" text-anchor="end" class="pin-label">A0</text>
+            <circle cx="320" cy="310" r="4" class="arduino-pin" /> <text x="290" y="313" text-anchor="end" class="pin-label">A1</text>
+            <circle cx="320" cy="330" r="4" class="arduino-pin" /> <text x="290" y="333" text-anchor="end" class="pin-label">A2</text>
+            <circle cx="320" cy="350" r="4" class="arduino-pin" /> <text x="290" y="353" text-anchor="end" class="pin-label">A3</text>
+            <circle cx="320" cy="370" r="4" class="arduino-pin" /> <text x="290" y="373" text-anchor="end" class="pin-label">A4</text>
+            <circle cx="320" cy="390" r="4" class="arduino-pin" /> <text x="290" y="393" text-anchor="end" class="pin-label">A5</text>
+
+            <rect x="50" y="50" width="200" height="40" rx="5" ry="5" class="led-strip-body" />
+            <text x="150" y="75" text-anchor="middle" class="component-label">LED Strip</text>
+            <circle cx="70" cy="70" r="8" class="led" />
+            <circle cx="100" cy="70" r="8" class="led" />
+            <circle cx="130" cy="70" r="8" class="led" />
+            <circle cx="160" cy="70" r="8" class="led" />
+            <circle cx="190" cy="70" r="8" class="led" />
+            <text x="200" y="95" class="pin-label">Data</text>
+            <text x="200" y="115" class="pin-label">VCC</text>
+            <text x="200" y="135" class="pin-label">GND</text>
+
+            <rect x="50" y="200" width="60" height="60" rx="10" ry="10" class="button-body" />
+            <circle cx="80" cy="230" r="20" class="button-cap-red" />
+            <text x="80" y="280" text-anchor="middle" class="component-label">Botão Vermelho</text>
+            <text x="115" y="220" class="pin-label">Pin</text>
+            <text x="115" y="240" class="pin-label">GND</text>
+
+            <rect x="50" y="300" width="60" height="60" rx="10" ry="10" class="button-body" />
+            <circle cx="80" cy="330" r="20" class="button-cap-blue" />
+            <text x="80" y="380" text-anchor="middle" class="component-label">Botão Azul</text>
+            <text x="115" y="320" class="pin-label">Pin</text>
+            <text x="115" y="340" class="pin-label">GND</text>
+
+            <rect x="50" y="400" width="60" height="60" rx="10" ry="10" class="button-body" />
+            <circle cx="80" cy="430" r="20" class="button-cap-gray" />
+            <text x="80" y="480" text-anchor="middle" class="component-label">Botão Reset</text>
+            <text x="115" y="420" class="pin-label">Pin</text>
+            <text x="115" y="440" class="pin-label">GND</text>
+
+            <rect x="700" y="150" width="100" height="80" rx="10" ry="10" class="buzzer-body" />
+            <circle cx="750" cy="180" r="30" class="buzzer-top" />
+            <text x="750" y="250" text-anchor="middle" class="component-label">Buzzer</text>
+            <circle cx="720" cy="210" r="5" class="buzzer-terminal" /> <text x="730" y="213" class="pin-label">+</text>
+            <circle cx="780" cy="210" r="5" class="buzzer-terminal" /> <text x="770" y="213" text-anchor="end" class="pin-label">-</text>
+
+            <path d="M200 95 L250 95 L250 290 L580 290" class="wire wire-green" />
+            <path d="M200 115 L250 115 L250 210 L320 210" class="wire wire-red" />
+            <path d="M200 135 L250 135 L250 190 L320 190" class="wire wire-black" />
+
+            <path d="M115 220 L200 220 L200 370 L580 370" class="wire wire-blue" />
+            <path d="M115 240 L150 240 L150 170 L320 170" class="wire wire-black" />
+
+            <path d="M115 320 L200 320 L200 350 L580 350" class="wire wire-orange" />
+            <path d="M115 340 L150 340 L150 190 L320 190" class="wire wire-black" />
+
+            <path d="M115 420 L200 420 L200 330 L580 330" class="wire wire-green" />
+            <path d="M115 440 L150 440 L150 170 L320 170" class="wire wire-black" />
+
+            <path d="M720 210 L650 210 L650 250 L580 250" class="wire wire-blue" />
+            <path d="M780 210 L850 210 L850 170 L320 170" class="wire wire-black" />
+        </svg>
+
+        <div class="llm-section">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">✨ Gerador de Ideias de Projeto ✨</h2>
+            <p class="text-gray-600 mb-4">Clique no botão abaixo para obter novas ideias criativas para expandir seu projeto de corrida de LED!</p>
+            <button id="generate-ideas-btn" class="llm-button">Gerar Novas Ideias</button>
+            <div id="ideas-output" class="ideas-output">
+                Suas ideias de projeto aparecerão aqui...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const generateIdeasBtn = document.getElementById('generate-ideas-btn');
+            const ideasOutput = document.getElementById('ideas-output');
+
+            generateIdeasBtn.addEventListener('click', async () => {
+                ideasOutput.innerHTML = '<div class="loading-spinner"></div> Gerando ideias...';
+                generateIdeasBtn.disabled = true;
+
+                const prompt = "Gere 3 a 5 ideias de projetos criativos e simples para expandir um projeto de corrida de LED com Arduino, fita de LED, botões e buzzer, adequado para alunos de robótica. As ideias devem focar em adicionar novas funcionalidades ou modos de jogo. Formate a resposta como uma lista numerada.";
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas will automatically provide the API key at runtime
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        // Format the text as an unordered list if it's not already
+                        const formattedText = text.split('\n').map(line => {
+                            // Remove leading numbers/hyphens and trim whitespace
+                            let cleanedLine = line.replace(/^\s*(\d+\.?\s*|[-*]\s*)/, '').trim();
+                            return cleanedLine ? `<li>${cleanedLine}</li>` : '';
+                        }).filter(Boolean).join('');
+                        ideasOutput.innerHTML = `<ul>${formattedText}</ul>`;
+                    } else {
+                        ideasOutput.innerHTML = 'Não foi possível gerar ideias. Tente novamente.';
+                    }
+                } catch (error) {
+                    console.error('Erro ao chamar a API Gemini:', error);
+                    ideasOutput.innerHTML = 'Ocorreu um erro ao gerar as ideias. Por favor, tente novamente mais tarde.';
+                } finally {
+                    generateIdeasBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
